@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environment
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Temporary files
+temp/*
+!temp/.gitkeep
+
+# Testing & IDE
+.pytest_cache/
+.coverage
+htmlcov/
+.idea/
+.vscode/
