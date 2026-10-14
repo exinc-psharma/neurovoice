@@ -121,6 +121,7 @@ async def root() -> Dict[str, Any]:
 
 
 @app.get("/health", tags=["Health"])
+@app.get("//health", tags=["Health"], include_in_schema=False)
 async def health_check() -> Dict[str, Any]:
     """Health check endpoint to verify backend status and model loading."""
     model_service: ModelService = getattr(app.state, "model_service", None)
@@ -135,6 +136,7 @@ async def health_check() -> Dict[str, Any]:
 
 
 @app.post("/predict", tags=["Prediction"])
+@app.post("//predict", tags=["Prediction"], include_in_schema=False)
 async def predict_voice(file: UploadFile = File(...)) -> Dict[str, Any]:
     """
     Accepts an uploaded WAV voice recording, runs preprocessing, extracts acoustic features,

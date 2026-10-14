@@ -1,8 +1,10 @@
-const API_BASE_URL =
+const rawApiUrl =
   import.meta.env.VITE_API_URL ||
   (import.meta.env.DEV
     ? "http://127.0.0.1:8000"
-    : "https://neurovoice-f5sc.onrender.com");
+    : "https://neurovoice-api.onrender.com");
+
+const API_BASE_URL = rawApiUrl.trim().replace(/\/+$/, "");
 
 export async function checkBackendHealth() {
   const response = await fetch(
