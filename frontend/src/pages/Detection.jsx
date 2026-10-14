@@ -1257,7 +1257,7 @@ export default function Detection() {
 
                           <p className="mt-1 text-xs text-slate-500">
                             Preprocessing audio, extracting acoustic features,
-                            and running the research model.
+                            and evaluating model classification. (Cloud server cold starts may take up to 30–45s).
                           </p>
                         </div>
 

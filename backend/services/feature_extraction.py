@@ -120,14 +120,21 @@ def extract_all_acoustic_features(y: np.ndarray, sr: int = TARGET_SR, n_mfcc: in
         feats['f0_max']    = float(np.max(f0_cycles))
         feats['voiced_fraction'] = float(len(periods) / (len(y) / peak_lag))
     else:
-        # Fallback to probabilistic YIN
-        f0_pi, _, _ = librosa.pyin(y, fmin=70, fmax=400, sr=sr)
-        valid_f0 = f0_pi[~np.isnan(f0_pi)]
-        feats['f0_mean']   = float(np.mean(valid_f0)) if len(valid_f0) > 0 else 0.0
-        feats['f0_std']    = float(np.std(valid_f0)) if len(valid_f0) > 0 else 0.0
-        feats['f0_min']    = float(np.min(valid_f0)) if len(valid_f0) > 0 else 0.0
-        feats['f0_max']    = float(np.max(valid_f0)) if len(valid_f0) > 0 else 0.0
-        feats['voiced_fraction'] = float(len(valid_f0) / len(f0_pi)) if len(f0_pi) > 0 else 0.0
+        # Fast YIN pitch tracking with hop_length=512 for responsive cloud execution
+        try:
+            f0_yin = librosa.yin(y, fmin=70, fmax=400, sr=sr, hop_length=512)
+            valid_f0 = f0_yin[(f0_yin >= 70) & (f0_yin <= 400) & ~np.isnan(f0_yin)]
+            feats['f0_mean'] = float(np.mean(valid_f0)) if len(valid_f0) > 0 else 0.0
+            feats['f0_std'] = float(np.std(valid_f0)) if len(valid_f0) > 0 else 0.0
+            feats['f0_min'] = float(np.min(valid_f0)) if len(valid_f0) > 0 else 0.0
+            feats['f0_max'] = float(np.max(valid_f0)) if len(valid_f0) > 0 else 0.0
+            feats['voiced_fraction'] = float(len(valid_f0) / len(f0_yin)) if len(f0_yin) > 0 else 0.0
+        except Exception:
+            feats['f0_mean'] = 0.0
+            feats['f0_std'] = 0.0
+            feats['f0_min'] = 0.0
+            feats['f0_max'] = 0.0
+            feats['voiced_fraction'] = 0.0
 
     return feats
 

@@ -1,15 +1,52 @@
 export async function convertBlobToWav(blob) {
   const arrayBuffer = await blob.arrayBuffer();
 
-  const audioContext = new (
-    window.AudioContext ||
-    window.webkitAudioContext
-  )();
+  const AudioContextClass =
+    window.AudioContext || window.webkitAudioContext;
+
+  if (!AudioContextClass) {
+    throw new Error("Web Audio API is not supported in this browser.");
+  }
+
+  const audioContext = new AudioContextClass();
 
   try {
-    const audioBuffer = await audioContext.decodeAudioData(
-      arrayBuffer
-    );
+    const audioBuffer = await new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error("Audio decoding timed out after 10 seconds."));
+      }, 10000);
+
+      let settled = false;
+
+      const onSuccess = (decoded) => {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timeoutId);
+          resolve(decoded);
+        }
+      };
+
+      const onError = (err) => {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timeoutId);
+          reject(err || new Error("Failed to decode audio data."));
+        }
+      };
+
+      try {
+        const promise = audioContext.decodeAudioData(
+          arrayBuffer,
+          onSuccess,
+          onError
+        );
+        if (promise && typeof promise.then === "function") {
+          promise.then(onSuccess).catch(onError);
+        }
+      } catch (callErr) {
+        onError(callErr);
+      }
+    });
 
     const wavBuffer = audioBufferToWav(audioBuffer);
 
@@ -17,7 +54,11 @@ export async function convertBlobToWav(blob) {
       type: "audio/wav",
     });
   } finally {
-    await audioContext.close();
+    try {
+      await audioContext.close();
+    } catch {
+      // AudioContext already closed or closing
+    }
   }
 }
 
