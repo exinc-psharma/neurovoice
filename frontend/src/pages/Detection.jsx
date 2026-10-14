@@ -222,16 +222,39 @@ export default function Detection() {
             );
         }
 
-        const stream =
-          await navigator.mediaDevices.getUserMedia(
-            {
+        /*
+         * Request raw, unfiltered audio stream for acoustic voice feature analysis.
+         * WebRTC speech filters (noise suppression, echo cancellation, auto gain)
+         * can alter continuous vowel harmonics. If a browser/device rejects constraints,
+         * fall back gracefully to default audio.
+         */
+        let stream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: false,
+              noiseSuppression: false,
+              autoGainControl: false,
+            },
+          });
+        } catch (constraintErr) {
+          if (
+            constraintErr.name === "OverconstrainedError" ||
+            constraintErr.name === "TypeError"
+          ) {
+            console.warn(
+              "Microphone constraints rejected, falling back to default audio:",
+              constraintErr
+            );
+            stream = await navigator.mediaDevices.getUserMedia({
               audio: true,
-            }
-          );
+            });
+          } else {
+            throw constraintErr;
+          }
+        }
 
-        setMicrophoneStream(
-          stream
-        );
+        setMicrophoneStream(stream);
 
         /*
          * Browser recording is normally
@@ -420,9 +443,29 @@ export default function Detection() {
           null
         );
 
-        setError(
-          "Microphone access was denied or is unavailable. Please allow microphone permission and try again."
-        );
+        let userMsg =
+          "Microphone access was denied or is unavailable. Please allow microphone permission and try again.";
+        if (
+          err?.name === "NotAllowedError" ||
+          err?.name === "PermissionDeniedError"
+        ) {
+          userMsg =
+            "Microphone permission was denied. Please allow microphone access in your browser settings to record your voice.";
+        } else if (
+          err?.name === "NotFoundError" ||
+          err?.name === "DevicesNotFoundError"
+        ) {
+          userMsg =
+            "No microphone detected on your device. Please connect a microphone or use file upload.";
+        } else if (
+          err?.name === "NotReadableError" ||
+          err?.name === "TrackStartError"
+        ) {
+          userMsg =
+            "Your microphone is in use by another application. Please close other audio apps and try again.";
+        }
+
+        setError(userMsg);
       }
     };
 

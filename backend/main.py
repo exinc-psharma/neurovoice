@@ -74,11 +74,16 @@ app = FastAPI(
 # ------------------------------------------------------------------------------
 # CORS Middleware Configuration
 # ------------------------------------------------------------------------------
-# Default allowed origins for local development; configurable via environment variable
-cors_env = os.getenv(
-    "CORS_ORIGINS","https://neurovoice-client.onrender.com"
-    # "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173"
+# Default allowed origins for local Vite/React development and deployed frontend;
+# configurable via CORS_ORIGINS environment variable
+cors_default = (
+    "http://localhost:5173,"
+    "http://127.0.0.1:5173,"
+    "http://localhost:3000,"
+    "http://127.0.0.1:3000,"
+    "https://neurovoice-client.onrender.com"
 )
+cors_env = os.getenv("CORS_ORIGINS", cors_default)
 allowed_origins: List[str] = [origin.strip() for origin in cors_env.split(",") if origin.strip()]
 
 app.add_middleware(
@@ -96,11 +101,13 @@ app.add_middleware(
 @app.get("/", tags=["Info"])
 async def root() -> Dict[str, Any]:
     """Root metadata and disclaimer endpoint."""
+    model_service: ModelService = getattr(app.state, "model_service", None)
+    is_loaded = model_service is not None and model_service.pipeline is not None
     return {
         "project": "Parkinson\'s Voice Pattern Classification",
         "type": "Educational and College Research Prototype",
         "status": "online",
-        "deployed_model": "Exp C1 (Logistic Regression with ANOVA-F feature selection)",
+        "deployed_model": model_service.config.get("model_name", "Exp C2 — Random Forest (ANOVA-F)") if is_loaded else "Uninitialized",
         "endpoints": {
             "health_check": "GET /health",
             "prediction": "POST /predict"
@@ -120,7 +127,7 @@ async def health_check() -> Dict[str, Any]:
     return {
         "status": "ok" if is_loaded else "degraded",
         "model_loaded": is_loaded,
-        "model_name": "Exp C1  Logistic Regression (ANOVA-F)",
+        "model_name": model_service.config.get("model_name", "Random Forest") if is_loaded else "None",
         "features_expected": model_service.feature_count if is_loaded else 0,
         "decision_threshold": model_service.decision_threshold if is_loaded else 0.50
     }

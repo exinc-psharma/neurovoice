@@ -1,5 +1,5 @@
 {
-  "model_name": "Exp C1 \u2014 Logistic Regression (ANOVA-F)",
+  "model_name": "Exp C2 - Random Forest (ANOVA-F, d=4, class_weight=balanced)",
   "feature_count": 100,
   "target_sample_rate": 8000,
   "trim_top_db": 25.0,
@@ -9,5 +9,5 @@
     "0": "Healthy voice pattern",
     "1": "Parkinson's-related voice pattern"
   },
-  "disclaimer": "Research prototype only. Not a clinical diagnostic system."
+  "disclaimer": "Educational and research prototype only. Not a clinical diagnostic system. Clinical diagnosis requires comprehensive neurological evaluation by licensed medical professionals."
 }
