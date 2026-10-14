@@ -35,7 +35,7 @@ export default function Detection() {
      Constants
   ------------------------------ */
 
-  const MAX_RECORDING_TIME = 3;
+  const MAX_RECORDING_TIME = 5;
   const MIN_RECORDING_TIME = 1.5;
 
   /* -----------------------------
@@ -120,7 +120,7 @@ export default function Detection() {
         clampedElapsed
       );
 
-      /* Automatically stop at 3 seconds */
+      /* Automatically stop at 5 seconds */
       if (
         elapsed >=
         MAX_RECORDING_TIME
@@ -700,9 +700,14 @@ export default function Detection() {
 
   const handleAnalyze =
     async () => {
-      if (!audioFile) {
+      if (
+        !audioFile ||
+        isRecording ||
+        (mediaRecorderRef.current &&
+          mediaRecorderRef.current.state === "recording")
+      ) {
         setError(
-          "Please record or upload a voice sample first."
+          "Please wait for recording to finish or select a voice sample first."
         );
 
         return;
@@ -909,8 +914,8 @@ export default function Detection() {
 
                     <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-500">
                       {isRecording
-                        ? "Hold the vowel steadily. Recording will stop automatically after 3 seconds."
-                        : 'Take a breath and sustain the vowel sound "AH" clearly for approximately 3 seconds.'}
+                        ? "Hold the vowel steadily. Recording will stop automatically after 5 seconds."
+                        : 'In a quiet environment, take a breath and sustain the vowel sound "aaaaa" steadily for approximately 3 seconds within the 5-second recording window.'}
                     </p>
 
                   </div>
@@ -954,7 +959,7 @@ export default function Detection() {
                     </div>
 
                     <p className="mt-3 text-xs text-slate-600">
-                      Maximum recording time: 3 seconds
+                      Maximum recording time: 5 seconds
                     </p>
 
                   </div>
@@ -1008,9 +1013,10 @@ export default function Detection() {
                       </p>
 
                       <p className="mt-1 text-xs leading-5 text-slate-600">
-                        Use a quiet environment and keep the microphone at a
-                        consistent distance. The research workflow uses
-                        sustained vowel recordings for voice analysis.
+                        In a quiet environment, keep the microphone at a
+                        consistent distance (about 15-20 cm) and sustain the vowel
+                        sound "aaaaa" steadily for approximately 3 seconds within
+                        the recording window.
                       </p>
                     </div>
 
@@ -1273,10 +1279,9 @@ export default function Detection() {
                 <Info className="mt-0.5 h-4 w-4 shrink-0 text-slate-600" />
 
                 <p className="text-xs leading-5 text-slate-600">
-                  For the research-based workflow, use a sustained vowel
-                  sound such as "AH". Keep the recording clear, maintain a
-                  consistent microphone distance, and minimize background
-                  noise.
+                  For the research-based workflow, sustain the vowel sound "aaaaa"
+                  clearly for approximately 3 seconds in a quiet room. Minimize
+                  background noise and keep a consistent distance from the microphone.
                 </p>
 
               </div>
